@@ -5,15 +5,17 @@ import (
 	"fmt"
 	"github.com/cheggaaa/pb/v3"
 	"log"
+	"os"
 	"sync"
 	"time"
 )
 
 var (
-	Port      = 443
-	MaxDelay  = time.Second
-	PingCount = 5
-	TestCount = 10
+	Port       = 443
+	MaxDelay   = time.Second
+	PingCount  = 5
+	TestCount  = 10
+	OutPutFile = "result.txt"
 )
 
 type Task struct {
@@ -53,9 +55,18 @@ func (task *Task) Run() {
 	if !DownloadDisabled {
 		downloadTest(task)
 	}
-	printResult(&task.resultSet)
+	contents := printResult(&task.resultSet)
 	if Dns {
 		setDnsRecords(&task.resultSet)
+	}
+	file, err := os.OpenFile(OutPutFile, os.O_WRONLY|os.O_CREATE, 0644)
+	if err != nil {
+		log.Fatal("open out put file failed." + err.Error())
+	}
+	defer file.Close()
+	fmt.Println("准备将结果写入文件：" + OutPutFile)
+	for _, content := range contents {
+		file.WriteString(content)
 	}
 }
 
@@ -73,13 +84,17 @@ func (result taskResultSet) Swap(i, j int) {
 	result[j] = tmp
 }
 
-func printResult(resultSet *taskResultSet) {
+func printResult(resultSet *taskResultSet) []string {
+	content := make([]string, 0)
 	for index, result := range *resultSet {
-		fmt.Printf("%-16s  %-16s %s\n", *result.ip, result.rtt, speedToStr(result.dlSpeed))
+		line := fmt.Sprintf("%-16s  %-16s %s\n", *result.ip, result.rtt, speedToStr(result.dlSpeed))
+		fmt.Print(line)
+		content = append(content, line)
 		if index >= TestCount {
 			break
 		}
 	}
+	return content
 }
 
 func speedToStr(speed float64) string {

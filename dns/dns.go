@@ -82,7 +82,6 @@ func SetDnsRecord(ip, domain string) {
 		method = "POST"
 		r = &record{
 			name:    domain,
-			ip:      ip,
 			ttl:     1,
 			proxied: false,
 			rType:   "A",
@@ -91,7 +90,7 @@ func SetDnsRecord(ip, domain string) {
 		url = fmt.Sprintf(recordUpdateUrl, ZoneId, r.id)
 	}
 	body := fmt.Sprintf("{\"type\":\"%s\",\"name\":\"%s\",\"content\":\"%s\",\"ttl\":%d,\"proxied\":%v}",
-		r.rType, r.name, r.ip, r.ttl, r.proxied)
+		r.rType, r.name, ip, r.ttl, r.proxied)
 	request, err := http.NewRequest(method, url, strings.NewReader(body))
 	defer request.Body.Close()
 	if err != nil {
@@ -107,8 +106,8 @@ func SetDnsRecord(ip, domain string) {
 	json.Unmarshal(bytes, &result)
 	success := result["success"].(bool)
 	if success {
-		fmt.Printf("set domain %s to %s success\n", domain, ip)
+		fmt.Printf("set domain %s from %s to %s success\n", domain, r.ip, ip)
 	} else {
-		fmt.Printf("set domain %s to %s failed.%v\n", domain, ip, result["errors"])
+		fmt.Printf("set domain %s from %s to %s failed.%v\n", domain, r.ip, ip, result["errors"])
 	}
 }
