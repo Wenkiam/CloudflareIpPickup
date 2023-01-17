@@ -25,6 +25,9 @@ type Ipv4Range struct {
 	broadcast *Ipv4
 }
 
+func (ip Ipv4) IsIpv4() bool {
+	return true
+}
 func Parse(ip string) (*Ipv4, error) {
 	ips := strings.Split(ip, ".")
 	if len(ips) != IPv4len {
@@ -41,7 +44,7 @@ func Parse(ip string) (*Ipv4, error) {
 	return p, nil
 }
 
-func parsCIDR(cidr string) (*Ipv4Range, error) {
+func parsIpv4CIDR(cidr string) (*Ipv4Range, error) {
 	ss := strings.Split(cidr, "/")
 	if len(ss) != 2 {
 		return nil, errors.New("invalid format:" + cidr)
@@ -74,16 +77,16 @@ func rangeOf(ip, mask *Ipv4) *Ipv4Range {
 	return &Ipv4Range{mask, minIp, maxIp}
 }
 
-func (ipRange *Ipv4Range) contains(ip *Ipv4) bool {
+func (ipRange Ipv4Range) contains(ip *Ipv4) bool {
 	min := ipRange.network.ipToInt32()
 	max := ipRange.broadcast.ipToInt32()
 	curr := ip.ipToInt32()
 	return curr >= min && curr <= max
 }
 
-func (ip *Ipv4) ipToInt32() int32 {
-	v := *ip
-	return (int32(v[0]) << 24) | (int32(v[1]) << 16) | (int32(v[2]) << 8) | int32(v[3])
+func (ip Ipv4) ipToInt32() int32 {
+
+	return (int32(ip[0]) << 24) | (int32(ip[1]) << 16) | (int32(ip[2]) << 8) | int32(ip[3])
 }
 
 func intToIp(ip int32) *Ipv4 {
@@ -96,11 +99,30 @@ func intToIp(ip int32) *Ipv4 {
 	return p
 }
 
-func (ip *Ipv4) String() string {
-	r := *ip
-	return fmt.Sprintf("%d.%d.%d.%d", r[0], r[1], r[2], r[3])
+func (ip Ipv4) String() string {
+	return fmt.Sprintf("%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3])
 }
 
-func (ipRange *Ipv4Range) String() string {
+func (ipRange Ipv4Range) String() string {
 	return fmt.Sprintf("{mask:%s, Network:%s, broadcast:%s}", ipRange.mask, ipRange.network, ipRange.broadcast)
+}
+
+func (ipRange Ipv4Range) pickup() []*Ip {
+	result := make([]*Ip, 0)
+	network := (*ipRange.network)[3]
+	randSeed := (*ipRange.broadcast)[3] - network
+	var ip = *ipRange.network
+	for ipRange.contains(&ip) {
+		ip[3] = network + byte(rand.Intn(int(randSeed)))
+		var ipToAppend Ip = ip
+		result = append(result, &ipToAppend)
+		ip[2]++
+		if ip[2] == 0 {
+			ip[1]++
+			if ip[1] == 0 {
+				ip[0]++
+			}
+		}
+	}
+	return result
 }

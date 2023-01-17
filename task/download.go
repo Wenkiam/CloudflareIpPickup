@@ -25,7 +25,7 @@ var (
 )
 
 func downloadTest(task *Task) {
-	fmt.Println("开始下载速度测试")
+	fmt.Println("开始下载速度测试, url:" + URL)
 	task.pb = pb.StartNew(min(TestCount, len(task.resultSet)))
 	resultSet := make(taskResultSet, 0)
 	for _, r := range task.resultSet {
@@ -45,16 +45,20 @@ func downloadTest(task *Task) {
 	task.resultSet = resultSet
 }
 
-func getDialContext(ip *ip.Ipv4) func(ctx context.Context, network, address string) (net.Conn, error) {
+func getDialContext(ip *ip.Ip) func(ctx context.Context, network, address string) (net.Conn, error) {
 	var fakeSourceAddr string
-	fakeSourceAddr = fmt.Sprintf("%s:%d", ip.String(), Port)
+	if (*ip).IsIpv4() {
+		fakeSourceAddr = fmt.Sprintf("%s:%d", *ip, Port)
+	} else {
+		fakeSourceAddr = fmt.Sprintf("[%s]:%d", *ip, Port)
+	}
 	return func(ctx context.Context, network, address string) (net.Conn, error) {
 		return (&net.Dialer{}).DialContext(ctx, network, fakeSourceAddr)
 	}
 }
 
 // return download Speed
-func downloadHandler(ip *ip.Ipv4) float64 {
+func downloadHandler(ip *ip.Ip) float64 {
 	client := &http.Client{
 		Transport: &http.Transport{DialContext: getDialContext(ip)},
 		Timeout:   Timeout,

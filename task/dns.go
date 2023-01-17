@@ -37,7 +37,8 @@ func setDnsRecords(results *taskResultSet) {
 		if index == len(*results) {
 			break
 		}
-		dns.SetDnsRecord((*results)[index].ip.String(), strings.TrimSpace(domain))
+		var ip = (*results)[index].ip
+		dns.SetDnsRecord(fmt.Sprintf("%s", *ip), strings.TrimSpace(domain))
 	}
 }
 func initConfig(path string) map[string]string {

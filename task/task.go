@@ -17,7 +17,7 @@ var (
 )
 
 type Task struct {
-	ips       []*ip.Ipv4
+	ips       []*ip.Ip
 	wg        *sync.WaitGroup
 	mutex     *sync.Mutex
 	pb        *pb.ProgressBar
@@ -26,7 +26,7 @@ type Task struct {
 }
 
 type taskResult struct {
-	ip      *ip.Ipv4
+	ip      *ip.Ip
 	rtt     time.Duration
 	dlSpeed float64
 }
@@ -75,7 +75,7 @@ func (result taskResultSet) Swap(i, j int) {
 
 func printResult(resultSet *taskResultSet) {
 	for index, result := range *resultSet {
-		fmt.Printf("%-16s  %-16s %s\n", result.ip, result.rtt, speedToStr(result.dlSpeed))
+		fmt.Printf("%-16s  %-16s %s\n", *result.ip, result.rtt, speedToStr(result.dlSpeed))
 		if index >= TestCount {
 			break
 		}
