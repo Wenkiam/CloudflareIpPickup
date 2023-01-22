@@ -19,4 +19,4 @@
 ## 参考项目
 
 - _https://github.com/Spedoske/CloudflareScanner_
-> 本项目为个人go学习练手项目，在该项目基础上基于个人需求添加了一些功能
+> 本项目为个人go学习练手项目，下载速度测试部分参考了上面的项目
