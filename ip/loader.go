@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -14,15 +15,32 @@ const (
 
 var (
 	Ipv4Url = CfIpv4Url
+	File    = "ip.txt"
 )
 
 func LoadIps() ([]*Ip, error) {
+	ips, err := loadFromFile()
+	if err == nil && len(ips) > 0 {
+		return ips, nil
+	}
 	res, err := http.Get(Ipv4Url)
 	if err != nil {
 		log.Println("load ip list from dns failed,reason:" + err.Error())
 		return nil, err
 	}
 	scanner := bufio.NewScanner(res.Body)
+	return loadFromScanner(scanner), nil
+}
+func loadFromFile() ([]*Ip, error) {
+	file, err := os.Open(File)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	return loadFromScanner(scanner), nil
+}
+func loadFromScanner(scanner *bufio.Scanner) []*Ip {
 	ranges := make([]*ipRange, 0)
 	for scanner.Scan() {
 		text := scanner.Text()
@@ -38,7 +56,7 @@ func LoadIps() ([]*Ip, error) {
 	for i := 0; i < len(ranges); i++ {
 		ips = append(ips, (*ranges[i]).pickup()...)
 	}
-	return ips, nil
+	return ips
 }
 func parseCIDR(cidr string) (*ipRange, error) {
 	isIpv6 := strings.Contains(cidr, ":")

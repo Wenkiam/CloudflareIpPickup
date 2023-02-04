@@ -19,7 +19,8 @@ func init() {
 	flag.BoolVar(&task.DownloadDisabled, "dd", false, "是否禁用下载速度测试")
 	flag.StringVar(&task.DnsConfig, "dp", "cf_dns.conf", "域名解析配置文件路径")
 	flag.StringVar(&task.URL, "du", task.DefaultURL, "下载速度测试url")
-	flag.StringVar(&task.OutPutFile, "f", "result.txt", "测试结果文件路径")
+	flag.StringVar(&task.OutPutFile, "rf", "result.txt", "测试结果文件路径")
+	flag.StringVar(&ip.File, "f", "ip.txt", "要测试的ip文件路径")
 	flag.Parse()
 
 }
